@@ -3,10 +3,10 @@ import java.util.ArrayList;
 import java.util.Random;
 public class KMeans_Ex4a
 {
-    private static final int NUM_CLUSTERS = 2;    // Total clusters.
-    private static final int TOTAL_DATA = 7;      // Total data points.
-    static double imbalance =1.1;
-    static double partition_constraint = (double) (imbalance * TOTAL_DATA / NUM_CLUSTERS);
+    private static final int NUM_CLUSTERS = 4;    // Total clusters.
+    private static final int TOTAL_DATA = 100;      // Total data points.
+    static double imbalance =100;
+    static double partition_constraint = (double) (imbalance * (TOTAL_DATA+1) / NUM_CLUSTERS);
     static int max_value=10000000;
     static ArrayList<ArrayList<Double>> dataset = new ArrayList<ArrayList<Double>>();
 
@@ -29,6 +29,12 @@ public class KMeans_Ex4a
         Random r = new Random();
         centroids.add(new Centroid(r.nextInt(max_value) , r.nextInt(max_value))); // lowest set.
         centroids.add(new Centroid(r.nextInt(max_value), r.nextInt(max_value))); // highest set.
+        centroids.add(new Centroid(r.nextInt(max_value) , r.nextInt(max_value))); // lowest set.
+        centroids.add(new Centroid(r.nextInt(max_value), r.nextInt(max_value))); // highest set.
+        centroids.add(new Centroid(1,1)); // lowest set.
+        centroids.add(new Centroid(6,6));
+        centroids.add(new Centroid(6,1));
+        centroids.add(new Centroid(1,6));// highest set.
         System.out.println("     (" + centroids.get(0).X() + ", " + centroids.get(0).Y() + ")");
         System.out.println("     (" + centroids.get(1).X() + ", " + centroids.get(1).Y() + ")");
         System.out.print("\n");
@@ -64,25 +70,24 @@ public class KMeans_Ex4a
       //{
        //     newData = new Data(dataset.get(sampleNumber).get(0), dataset.get(sampleNumber).get(0));
             while(dataSet.size() < TOTAL_DATA)
-            {
-                newData = new Data(SAMPLES[sampleNumber][0], SAMPLES[sampleNumber][1]);
-            dataSet.add(newData);
+            {   newData = new Data(dataset.get(sampleNumber).get(0), dataset.get(sampleNumber).get(0));
+               // newData = new Data(SAMPLES[sampleNumber][0], SAMPLES[sampleNumber][1]);
+
             minimum = bigNumber;
             maximum=0;
             for(int i = 0; i < NUM_CLUSTERS; i++)
             {   size=centroids.get(i).size;
-                System.out.println("this centroid starts has elements: "+centroids.get(i).size);
+               // System.out.println("this centroid starts has elements: "+centroids.get(i).size);
                // distance = dist(newData, centroids.get(i))* (1 - size / partition_constraint);
-                similarity = sim(newData, centroids.get(i))
-                        * (1 - size / partition_constraint);
+                similarity = sim(newData, centroids.get(i))* (1 - size / partition_constraint);
                 if(similarity > maximum){
                     maximum = similarity;
                     cluster = i;
-                    System.out.println("point:"+newData.X()+","+newData.Y()+", has been assigned to: "+centroids.get(i).X()+","+centroids.get(i).Y());
+                    //System.out.println("point:"+newData.X()+","+newData.Y()+", has been assigned to: "+centroids.get(i).X()+","+centroids.get(i).Y());
                 }
             }
             newData.cluster(cluster);
-
+                dataSet.add(newData);
 
             sampleNumber++;
         }
@@ -105,8 +110,9 @@ public class KMeans_Ex4a
                 centroids.get(i).X(totalX / totalInCluster);
                 centroids.get(i).Y(totalY / totalInCluster);
                 centroids.get(i).size(totalInCluster);
-                System.out.println("this centroid has elements: "+centroids.get(i).size);
+                System.out.println("the new centroid is in:"+centroids.get(i).X()+","+centroids.get(i).Y()+" centroid has elements: "+centroids.get(i).size);
             }
+            centroids.get(i).size(totalInCluster);
         }
 
         // Now, keep shifting centroids until equilibrium occurs.
@@ -127,11 +133,11 @@ public class KMeans_Ex4a
                 for(int j = 0; j < NUM_CLUSTERS; j++)
                 {   size = centroids.get(j).size;
                     similarity = sim(tempData, centroids.get(j))* (1 - size / partition_constraint);
-                    System.out.println("raw 112 Compared with: "+centroids.get(j).X()+","+centroids.get(j).Y());
+                    //System.out.println("raw 112 Compared with: "+centroids.get(j).X()+","+centroids.get(j).Y());
                     if(similarity > maximum){
                         maximum = similarity;
                         cluster = j;
-                        System.out.println("raw 116 point:"+tempData.X()+","+tempData.Y()+", has been assigned to: "+centroids.get(j).X()+","+centroids.get(j).Y());
+                        //System.out.println("raw 116 point:"+tempData.X()+","+tempData.Y()+", has been assigned to: "+centroids.get(j).X()+","+centroids.get(j).Y());
 
                     }
 
@@ -166,8 +172,10 @@ public class KMeans_Ex4a
                     centroids.get(i).X((double) totalX / totalInCluster);
                     centroids.get(i).Y((double) totalY / totalInCluster);
                     centroids.get(i).size(totalInCluster);
-                    System.out.println("this centroid has elements: "+centroids.get(i).size);
+                    System.out.println("the new centroid is in:"+centroids.get(i).X()+","+centroids.get(i).Y()+" centroid has elements: "+centroids.get(i).size);
+
                 }
+                centroids.get(i).size(totalInCluster);
             }
             boolean equal = true;
             for(int i = 0; i < NUM_CLUSTERS; i++) {
@@ -332,7 +340,7 @@ public class KMeans_Ex4a
         System.out.println("Centroids finalized at:");
         for(int i = 0; i < NUM_CLUSTERS; i++)
         {
-            System.out.println("     (" + centroids.get(i).X() + ", " + centroids.get(i).Y());
+            System.out.println("     (" + centroids.get(i).X() + ", " + centroids.get(i).Y()+" size:"+centroids.get(i).size );
         }
         System.out.print("\n");
         return;

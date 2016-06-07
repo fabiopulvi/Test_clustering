@@ -1,10 +1,14 @@
 
 import java.util.ArrayList;
-
+import java.util.Random;
 public class KMeans_Ex4a
 {
     private static final int NUM_CLUSTERS = 2;    // Total clusters.
     private static final int TOTAL_DATA = 7;      // Total data points.
+    static double imbalance =1.1;
+    static double partition_constraint = (double) (imbalance * TOTAL_DATA / NUM_CLUSTERS);
+    static int max_value=10000000;
+    static ArrayList<ArrayList<Double>> dataset = new ArrayList<ArrayList<Double>>();
 
     private static final double SAMPLES[][] = new double[][] {{1.0, 1.0},
             {1.5, 2.0},
@@ -14,76 +18,139 @@ public class KMeans_Ex4a
             {4.5, 5.0},
             {3.5, 4.5}};
 
+
+
     private static ArrayList<Data> dataSet = new ArrayList<Data>();
     private static ArrayList<Centroid> centroids = new ArrayList<Centroid>();
 
     private static void initialize()
     {
         System.out.println("Centroids initialized at:");
-        centroids.add(new Centroid(1.0, 1.0)); // lowest set.
-        centroids.add(new Centroid(5.0, 7.0)); // highest set.
+        Random r = new Random();
+        centroids.add(new Centroid(r.nextInt(max_value) , r.nextInt(max_value))); // lowest set.
+        centroids.add(new Centroid(r.nextInt(max_value), r.nextInt(max_value))); // highest set.
         System.out.println("     (" + centroids.get(0).X() + ", " + centroids.get(0).Y() + ")");
         System.out.println("     (" + centroids.get(1).X() + ", " + centroids.get(1).Y() + ")");
         System.out.print("\n");
+
+
+        for (int i=0;i<TOTAL_DATA;i++) {
+            ArrayList<Double> point = new ArrayList<Double>();
+            double x = (double) r.nextInt(max_value);
+            point.add(x);
+            double y = (double) r.nextInt(max_value);
+            point.add(y);
+            dataset.add(point);
+
+           ;
+        }
         return;
     }
 
     private static void kMeanCluster()
     {
         final double bigNumber = Math.pow(10, 10);    // some big number that's sure to be larger than our data range.
-        double minimum = bigNumber;                   // The minimum value to beat. 
-        double distance = 0.0;                        // The current minimum value.
+        double minimum = bigNumber;
+        double maximum=0;
+        double distance = 0.0;
+        double similarity= 0.0;
         int sampleNumber = 0;
         int cluster = 0;
         boolean isStillMoving = true;
         Data newData = null;
+        int size=0;
 
         // Add in new data, one at a time, recalculating centroids with each new one. 
-        while(dataSet.size() < TOTAL_DATA)
-        {
-            newData = new Data(SAMPLES[sampleNumber][0], SAMPLES[sampleNumber][1]);
+      //{
+       //     newData = new Data(dataset.get(sampleNumber).get(0), dataset.get(sampleNumber).get(0));
+            while(dataSet.size() < TOTAL_DATA)
+            {
+                newData = new Data(SAMPLES[sampleNumber][0], SAMPLES[sampleNumber][1]);
             dataSet.add(newData);
             minimum = bigNumber;
+            maximum=0;
             for(int i = 0; i < NUM_CLUSTERS; i++)
-            {
-                distance = dist(newData, centroids.get(i));
-                if(distance < minimum){
-                    minimum = distance;
+            {   size=centroids.get(i).size;
+                System.out.println("this centroid starts has elements: "+centroids.get(i).size);
+               // distance = dist(newData, centroids.get(i))* (1 - size / partition_constraint);
+                similarity = sim(newData, centroids.get(i))
+                        * (1 - size / partition_constraint);
+                if(similarity > maximum){
+                    maximum = similarity;
                     cluster = i;
+                    System.out.println("point:"+newData.X()+","+newData.Y()+", has been assigned to: "+centroids.get(i).X()+","+centroids.get(i).Y());
                 }
             }
             newData.cluster(cluster);
 
-            // calculate new centroids.
-            for(int i = 0; i < NUM_CLUSTERS; i++)
+
+            sampleNumber++;
+        }
+
+        // calculate new centroids.
+        for(int i = 0; i < NUM_CLUSTERS; i++)
+        {
+            int totalX = 0;
+            int totalY = 0;
+            int totalInCluster = 0;
+            for(int j = 0; j < dataSet.size(); j++)
             {
-                int totalX = 0;
-                int totalY = 0;
-                int totalInCluster = 0;
-                for(int j = 0; j < dataSet.size(); j++)
-                {
-                    if(dataSet.get(j).cluster() == i){
-                        totalX += dataSet.get(j).X();
-                        totalY += dataSet.get(j).Y();
-                        totalInCluster++;
-                    }
-                }
-                if(totalInCluster > 0){
-                    centroids.get(i).X(totalX / totalInCluster);
-                    centroids.get(i).Y(totalY / totalInCluster);
+                if(dataSet.get(j).cluster() == i){
+                    totalX += dataSet.get(j).X();
+                    totalY += dataSet.get(j).Y();
+                    totalInCluster++;
                 }
             }
-            sampleNumber++;
+            if(totalInCluster > 0){
+                centroids.get(i).X(totalX / totalInCluster);
+                centroids.get(i).Y(totalY / totalInCluster);
+                centroids.get(i).size(totalInCluster);
+                System.out.println("this centroid has elements: "+centroids.get(i).size);
+            }
         }
 
         // Now, keep shifting centroids until equilibrium occurs.
         while(isStillMoving)
         {
+            System.out.println("assigning the points");
+
+
+            // Assign all data to the new centroids
+
+            System.out.println("Iteration");
+            for(int i = 0; i < dataSet.size(); i++)
+            {
+                Data tempData = dataSet.get(i);
+                int old_cluster=tempData.cluster();
+                minimum = bigNumber;
+                maximum=0;
+                for(int j = 0; j < NUM_CLUSTERS; j++)
+                {   size = centroids.get(j).size;
+                    similarity = sim(tempData, centroids.get(j))* (1 - size / partition_constraint);
+                    System.out.println("raw 112 Compared with: "+centroids.get(j).X()+","+centroids.get(j).Y());
+                    if(similarity > maximum){
+                        maximum = similarity;
+                        cluster = j;
+                        System.out.println("raw 116 point:"+tempData.X()+","+tempData.Y()+", has been assigned to: "+centroids.get(j).X()+","+centroids.get(j).Y());
+
+                    }
+
+                }
+                tempData.cluster(cluster);
+
+            }
+
+            //backup of the old centroids
+            ArrayList<Centroid> centroids_old = new ArrayList<Centroid>();
+            for(int i = 0; i < NUM_CLUSTERS; i++)
+            {
+                centroids_old.add(new Centroid(centroids.get(i).X(), centroids.get(i).Y()));
+            }
             // calculate new centroids.
             for(int i = 0; i < NUM_CLUSTERS; i++)
             {
-                int totalX = 0;
-                int totalY = 0;
+                double totalX = 0;
+                double totalY = 0;
                 int totalInCluster = 0;
                 for(int j = 0; j < dataSet.size(); j++)
                 {
@@ -94,32 +161,26 @@ public class KMeans_Ex4a
                     }
                 }
                 if(totalInCluster > 0){
-                    centroids.get(i).X(totalX / totalInCluster);
-                    centroids.get(i).Y(totalY / totalInCluster);
+                    System.out.println(+totalX+","+totalInCluster);
+                    System.out.println(+totalX+","+totalInCluster);
+                    centroids.get(i).X((double) totalX / totalInCluster);
+                    centroids.get(i).Y((double) totalY / totalInCluster);
+                    centroids.get(i).size(totalInCluster);
+                    System.out.println("this centroid has elements: "+centroids.get(i).size);
                 }
             }
+            boolean equal = true;
+            for(int i = 0; i < NUM_CLUSTERS; i++) {
+                distance = dist_centroid(centroids_old.get(i), centroids.get(i));
+                System.out.println("Now we will compare the old centroids: "+centroids_old.get(i).X()+","+centroids_old.get(i).Y()+" with the new ones: "+centroids.get(i).X()+","+centroids.get(i).Y());
 
-            // Assign all data to the new centroids
-            isStillMoving = false;
-
-            for(int i = 0; i < dataSet.size(); i++)
-            {
-                Data tempData = dataSet.get(i);
-                minimum = bigNumber;
-                for(int j = 0; j < NUM_CLUSTERS; j++)
-                {
-                    distance = dist(tempData, centroids.get(j));
-                    if(distance < minimum){
-                        minimum = distance;
-                        cluster = j;
-                    }
-                }
-                tempData.cluster(cluster);
-                if(tempData.cluster() != cluster){
-                    tempData.cluster(cluster);
-                    isStillMoving = true;
-                }
+                if (distance!=0) equal=false;
             }
+            if (equal==true) {
+
+                isStillMoving=false;
+            }
+
         }
         return;
     }
@@ -131,6 +192,16 @@ public class KMeans_Ex4a
      * @return - double value.
      */
     private static double dist(Data d, Centroid c)
+    {
+        return Math.sqrt(Math.pow((c.Y() - d.Y()), 2) + Math.pow((c.X() - d.X()), 2));
+    }
+
+    private static double sim(Data d, Centroid c)
+    {
+        return (double) (1/(1+Math.sqrt(Math.pow((c.Y() - d.Y()), 2) + Math.pow((c.X() - d.X()), 2))));
+    }
+
+    private static double dist_centroid(Centroid d, Centroid c)
     {
         return Math.sqrt(Math.pow((c.Y() - d.Y()), 2) + Math.pow((c.X() - d.X()), 2));
     }
@@ -191,6 +262,7 @@ public class KMeans_Ex4a
     {
         private double mX = 0.0;
         private double mY = 0.0;
+        private int size =0;
 
         public Centroid()
         {
@@ -224,6 +296,17 @@ public class KMeans_Ex4a
         public double Y()
         {
             return this.mY;
+        }
+
+        public void size(int newsize)
+        {
+            this.size = newsize;
+            return;
+        }
+
+        public double size()
+        {
+            return this.size;
         }
     }
 
